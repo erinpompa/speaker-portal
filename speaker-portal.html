@@ -518,7 +518,10 @@ function loadData() {
   } catch(e) { return { speakers: DEFAULT_SPEAKERS, offboarded: DEFAULT_OFFBOARDED }; }
 }
 
+let _userSaved = false; // tracks if user made changes before cloud loaded
+
 function save() {
+  _userSaved = true;
   localStorage.setItem('ts365_v9_speakers', JSON.stringify(data.speakers));
   localStorage.setItem('ts365_v9_offboarded', JSON.stringify(data.offboarded));
   saveToCloud();
@@ -526,8 +529,9 @@ function save() {
 
 let data = loadData();
 
-// On startup: load from cloud and refresh UI
+// On startup: load from cloud, but don't overwrite if user already made changes
 loadFromCloud().then(cloudData => {
+  if (_userSaved) return; // user already interacted — their changes win
   if (cloudData) {
     const hasCloudSpeakers = Array.isArray(cloudData.speakers) && cloudData.speakers.length > 0;
     const hasCloudOffboarded = Array.isArray(cloudData.offboarded) && cloudData.offboarded.length > 0;
@@ -536,7 +540,6 @@ loadFromCloud().then(cloudData => {
       localStorage.setItem('ts365_v9_speakers', JSON.stringify(data.speakers));
       localStorage.setItem('ts365_v9_offboarded', JSON.stringify(data.offboarded));
     } else {
-      // Cloud is empty — push our local data up
       saveToCloud();
     }
   } else {
@@ -1053,9 +1056,6 @@ function updateOffboardDate(offboardId, val) {
 }
 
 function executeOffboard(id) {
-  const allBoxes = document.querySelectorAll(`[id^="obck_${id}_"]`);
-  const unchecked = [...allBoxes].filter(b => !b.checked).length;
-  if (unchecked && !confirm(`${unchecked} step(s) not yet checked off. Offboard anyway?`)) return;
   const s = data.speakers.find(x => x.id === id);
   if (!s) return;
   const steps = {};
