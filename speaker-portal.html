@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TruthSpeaks 365 | Speaker Portal</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f4f0; color: #1a1a1a; }
+
+.header { background: #1a1a2e; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 1.3rem; font-weight: 700; }
+.header span { font-size: 0.85rem; opacity: 0.6; }
+
+.nav { background: white; border-bottom: 2px solid #e8e6e0; display: flex; padding: 0 24px; overflow-x: auto; }
+.nav button { background: none; border: none; padding: 14px 20px; font-size: 0.9rem; cursor: pointer; color: #666; border-bottom: 3px solid transparent; white-space: nowrap; font-weight: 500; transition: all 0.15s; }
+.nav button:hover { color: #1a1a2e; }
+.nav button.active { color: #c0392b; border-bottom-color: #c0392b; font-weight: 700; }
+
+.main { padding: 28px 32px; max-width: 1280px; margin: 0 auto; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Alerts */
+.alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.alert { padding: 12px 16px; border-radius: 8px; font-size: 0.86rem; display: flex; align-items: flex-start; gap: 10px; }
+.alert.red { background: #fde8e8; border-left: 4px solid #c0392b; color: #7b2020; }
+.alert.yellow { background: #fef9e7; border-left: 4px solid #f39c12; color: #7d5a00; }
+.alert.green { background: #eafaf1; border-left: 4px solid #27ae60; color: #1a6b3a; }
+
+/* Stats */
+.stats-row { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+.stat-card { background: white; border-radius: 10px; padding: 16px 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.06); min-width: 130px; flex: 1; }
+.stat-num { font-size: 1.9rem; font-weight: 800; color: #1a1a2e; }
+.stat-num.red { color: #c0392b; }
+.stat-num.yellow { color: #e67e22; }
+.stat-label { font-size: 0.75rem; color: #888; margin-top: 3px; }
+
+/* Speaker table on dashboard */
+.dash-table-wrap { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); overflow-x: auto; }
+.dash-table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.83rem; min-width: 700px; }
+th { background: #1a1a2e; color: white; padding: 11px 14px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
+td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafaf8; }
+
+.badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+.badge.yes { background: #d5f5e3; color: #1a6b3a; }
+.badge.no { background: #fde8e8; color: #7b2020; }
+.badge.warn { background: #fef9e7; color: #7d5a00; }
+.badge.na { background: #f0f0f0; color: #999; }
+.badge.pending { background: #e8eaf6; color: #3949ab; }
+
+.text-red { color: #c0392b; font-weight: 600; }
+.text-yellow { color: #e67e22; font-weight: 600; }
+.text-green { color: #27ae60; font-weight: 600; }
+.text-muted { color: #aaa; }
+
+/* Speaker cards */
+.speaker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+.speaker-card { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); overflow: hidden; }
+.card-header { padding: 16px 20px; background: #f9f8f6; border-bottom: 1px solid #eee; }
+.card-name { font-weight: 700; font-size: 1rem; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+.card-email { font-size: 0.78rem; color: #888; margin-top: 2px; }
+.card-meta { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
+.card-body { padding: 16px 20px; }
+.card-footer { padding: 12px 20px; border-top: 1px solid #eee; display: flex; gap: 8px; justify-content: space-between; align-items: center; }
+
+.section-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+.section-label:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.info-item { display: flex; flex-direction: column; gap: 2px; }
+.info-item .lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.3px; }
+.info-item .val { font-size: 0.83rem; font-weight: 600; color: #1a1a2e; }
+.info-item .val.muted { color: #bbb; font-weight: 400; }
+
+/* Editable fields */
+.edit-row { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.edit-row input[type=date], .edit-row select { border: 1px solid #ddd; border-radius: 5px; padding: 5px 8px; font-size: 0.8rem; color: #333; }
+.edit-row label { font-size: 0.75rem; color: #888; display: flex; align-items: center; gap: 4px; }
+.btn-sm { border: none; border-radius: 5px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
+.btn-primary { background: #1a1a2e; color: white; }
+.btn-primary:hover { background: #2d2d5e; }
+.btn-danger { background: #c0392b; color: white; }
+.btn-danger:hover { background: #a93226; }
+.btn-ghost { background: #f0f0f0; color: #555; }
+.btn-ghost:hover { background: #e0e0e0; }
+.btn-remind { background: none; border: 1px solid #c0392b; color: #c0392b; border-radius: 5px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; font-weight: 600; }
+.btn-remind:hover { background: #c0392b; color: white; }
+
+/* Checklist */
+.checklist { display: flex; flex-direction: column; gap: 5px; }
+.check-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #444; }
+.check-item input[type=checkbox] { accent-color: #27ae60; width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+.check-item label { cursor: pointer; line-height: 1.3; }
+.check-item.done label { text-decoration: line-through; color: #bbb; }
+
+.deadline-box { background: #f9f4ff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+.deadline-box.overdue { background: #fde8e8; border-color: #f5a0a0; }
+.deadline-box.soon { background: #fef9e7; border-color: #fcd34d; }
+.deadline-box.ok { background: #eafaf1; border-color: #86efac; }
+
+/* Module progress */
+.module-list { display: flex; flex-direction: column; gap: 10px; }
+.module-row { background: #f9f8f6; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #ddd; }
+.module-row.complete { border-left-color: #27ae60; }
+.module-row.partial { border-left-color: #f39c12; }
+.module-row.pending { border-left-color: #ddd; }
+.module-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.module-title { font-size: 0.82rem; font-weight: 700; color: #1a1a2e; }
+.module-progress { font-size: 0.72rem; color: #888; }
+.module-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
+.section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px; color: #1a1a2e; }
+
+/* Add speaker */
+.add-btn { background: #c0392b; color: white; border: none; border-radius: 8px; padding: 10px 22px; font-size: 0.88rem; cursor: pointer; font-weight: 700; margin-bottom: 24px; }
+.add-btn:hover { background: #a93226; }
+
+/* Offboard modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: white; border-radius: 14px; padding: 28px; width: 520px; max-width: 95vw; max-height: 88vh; overflow-y: auto; }
+.modal h2 { font-size: 1.15rem; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+.modal .sub { font-size: 0.83rem; color: #888; margin-bottom: 18px; }
+.modal-checklist { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.modal-check { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #f9f8f6; border-radius: 8px; transition: background 0.15s; }
+.modal-check input { accent-color: #c0392b; width: 16px; height: 16px; margin-top: 1px; cursor: pointer; flex-shrink: 0; }
+.modal-check label { font-size: 0.84rem; color: #333; cursor: pointer; line-height: 1.4; }
+.modal-check.done { background: #eafaf1; }
+.modal-check.done label { color: #aaa; text-decoration: line-through; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Add modal */
+.add-modal { background: white; border-radius: 14px; padding: 28px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.add-modal h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 18px; color: #1a1a2e; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1/-1; }
+.form-group label { font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.4px; }
+.form-group input, .form-group select { border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.88rem; }
+
+/* Offboard table */
+.table-wrap { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); overflow-x: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+
+.link-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; color: #3949ab; text-decoration: none; border: 1px solid #c5cae9; border-radius: 5px; padding: 3px 9px; }
+.link-btn:hover { background: #e8eaf6; }
+
+@media(max-width:640px) {
+  .main { padding: 16px; }
+  .header { padding: 14px 16px; }
+  .nav { padding: 0 8px; }
+  .speaker-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+  .module-checks { grid-template-columns: 1fr; }
+  .stats-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>TruthSpeaks 365 &mdash; Speaker Portal</h1>
+  <span id="today-date"></span>
+</div>
+
+<nav class="nav">
+  <button class="active" onclick="showTab('dashboard',this)">Dashboard</button>
+  <button onclick="showTab('onboarding',this)">Onboarding</button>
+  <button onclick="showTab('agreements',this)">Agreements &amp; COI</button>
+  <button onclick="showTab('training',this)">Training Progress</button>
+  <button onclick="showTab('offboarding',this)">Offboarding</button>
+</nav>
+
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div id="dash-alerts" class="alerts"></div>
+    <div class="stats-row" id="dash-stats"></div>
+    <div class="section-title">Active Speakers</div>
+    <div class="dash-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Speaker</th>
+          <th>Agreement Sent</th>
+          <th>Agreement Effective</th>
+          <th>Agreement End</th>
+          <th>Agreement Received</th>
+          <th>COI Received</th>
+          <th>COI Expiry</th>
+        </tr></thead>
+        <tbody id="dash-tbody"></tbody>
+      </table>
+    </div>
+    <div id="dash-onhold"></div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="tab-onboarding" class="tab-content">
+    <button class="add-btn" onclick="openAddModal()">+ Add New Speaker</button>
+    <div class="speaker-grid" id="onboarding-cards"></div>
+    <div id="onhold-section"></div>
+  </div>
+
+  <!-- AGREEMENTS & COI -->
+  <div id="tab-agreements" class="tab-content">
+    <div class="section-title" style="display:flex;align-items:center;gap:12px;">
+      Agreements &amp; COI
+      <a href="https://drive.google.com/drive/folders/140nnUFUvUhRcZclKVSRr6vVhHRLzaS2H" target="_blank" class="link-btn">📁 COI Drive Folder</a>
+    </div>
+    <div class="speaker-grid" id="agreement-cards"></div>
+  </div>
+
+  <!-- TRAINING -->
+  <div id="tab-training" class="tab-content">
+    <div class="section-title">Training Progress by Module</div>
+    <div class="speaker-grid" id="training-cards"></div>
+  </div>
+
+  <!-- OFFBOARDING -->
+  <div id="tab-offboarding" class="tab-content">
+    <div class="section-title">Offboard a Speaker</div>
+    <p style="font-size:.85rem;color:#888;margin-bottom:20px;">Select a speaker to see everything that needs to be removed or undone before they're offboarded.</p>
+    <div id="offboard-speaker-select" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;"></div>
+    <div id="offboard-checklist-view"></div>
+    <div class="section-title" style="margin-top:40px;color:#aaa;">Offboard History</div>
+    <div class="table-wrap">
+      <table>
+        <thead id="offboard-thead"><tr>
+          <th>Name</th><th>Email</th><th>Offboard Date</th>
+        </tr></thead>
+        <tbody id="offboard-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- OFFBOARD MODAL (retired - offboarding is now inline) -->
+<div class="modal-overlay" id="offboard-modal" style="display:none!important;">
+  <div class="modal">
+  </div>
+</div>
+
+<!-- ADD SPEAKER MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="add-modal">
+    <h2>Add New Speaker</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Name *</label><input id="new-name" type="text" placeholder="Full Name"></div>
+      <div class="form-group"><label>Email *</label><input id="new-email" type="email" placeholder="email@example.com"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Onboarding Start Date</label><input id="new-start" type="date"></div>
+      <div class="form-group"><label>Agreement Sent Date</label><input id="new-ag-sent" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Agreement Effective Date</label><input id="new-ag-eff" type="date"></div>
+      <div class="form-group"><label>Agreement Length (Years)</label>
+        <select id="new-ag-years">
+          <option value="">Select...</option>
+          <option value="1">1 Year</option><option value="2">2 Years</option>
+          <option value="3">3 Years</option><option value="5">5 Years</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>COI Required?</label>
+        <select id="new-coi-req"><option value="true">Yes</option><option value="false">No (Intern)</option></select>
+      </div>
+      <div class="form-group"><label>COI Expiry (if known)</label><input id="new-coi-exp" type="date"></div>
+    </div>
+    <div class="modal-footer" style="margin-top:10px;">
+      <button class="btn-sm btn-ghost" onclick="closeModal('add-modal')">Cancel</button>
+      <button class="btn-sm btn-primary" style="padding:8px 20px;" onclick="addSpeaker()">Add Speaker</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeb5qU0p9uk8kn5K9m-YcfoCh-SW8vOI4u6cezOiIHsfAchPg/viewform';
+const COI_FOLDER = 'https://drive.google.com/drive/folders/140nnUFUvUhRcZclKVSRr6vVhHRLzaS2H';
+
+const DEFAULT_SPEAKERS = [
+  {
+    id: 's1',
+    name: 'Christine Conti',
+    email: 'christine@contifitness.net',
+    sentDate: '2025-06-11',
+    coiRequired: true,
+    onboarding: {
+      onboardEmailSent: true,
+      trainingPortalAccess: true,
+      speakerDriveAccess: true,
+      addedToEmailGroup: true,
+      calAdded60Day: true,
+      trainingComplete: true,
+      calAdded30Day: true,
+      keynoteComplete: false,
+      contractReceived: true,
+      w9: true,
+      headshot: true,
+      fullBody: true,
+      resume: true,
+      certifications: true,
+      addedToPromoFolder: false,
+      updatedIntroEmail: false,
+      updatedWebsite: false
+    },
+    agreement: {
+      sent: '2026-06-16',
+      received: '',
+      effective: '2026-07-01',
+      years: 2,
+      endDate: '2028-07-01'
+    },
+    coi: { received: true, expiryDate: '2027-02-10' },
+    training: {
+      mod1_recording: true, mod1_feedback: true,
+      mod7_inky: true, mod7_feedback: true,
+      mod8_quiz: true,
+      mod9_theme: false, mod9_feedback: false,
+      mod10_experiment: true, mod10_feedback: false,
+      mod12_theme2: false, mod12_feedback: true,
+      mod13_erin: true, mod13_feedback: true,
+      mod14_quiz: true,
+      mod15_hs: false, mod16_ms: false, mod17_additional: false
+    },
+    status: 'active'
+  },
+  {
+    id: 's2',
+    name: 'Katherine Quinones',
+    email: 'katherine_q07@hotmail.com',
+    sentDate: '2025-07-07',
+    coiRequired: true,
+    onboarding: {
+      onboardEmailSent: true,
+      trainingPortalAccess: true,
+      speakerDriveAccess: true,
+      addedToEmailGroup: true,
+      calAdded60Day: false,
+      trainingComplete: false,
+      calAdded30Day: false,
+      keynoteComplete: false,
+      contractReceived: true,
+      w9: true,
+      headshot: true,
+      fullBody: true,
+      resume: true,
+      certifications: true,
+      addedToPromoFolder: false,
+      updatedIntroEmail: false,
+      updatedWebsite: false
+    },
+    agreement: {
+      sent: '',
+      received: '',
+      effective: '',
+      years: null,
+      endDate: ''
+    },
+    coi: { received: false, expiryDate: '' },
+    training: {
+      mod1_recording: true, mod1_feedback: true,
+      mod7_inky: false, mod7_feedback: false,
+      mod8_quiz: true,
+      mod9_theme: true, mod9_feedback: true,
+      mod10_experiment: false, mod10_feedback: false,
+      mod12_theme2: true, mod12_feedback: false,
+      mod13_erin: false, mod13_feedback: false,
+      mod14_quiz: true,
+      mod15_hs: false, mod16_ms: false, mod17_additional: false
+    },
+    status: 'active'
+  },
+  {
+    id: 's3',
+    name: 'Nicolle Gonzalez',
+    email: 'Nicolle.Gonzalez90@gmail.com',
+    sentDate: '2025-09-11',
+    coiRequired: true,
+    onboarding: {
+      onboardEmailSent: true,
+      trainingPortalAccess: true,
+      speakerDriveAccess: true,
+      addedToEmailGroup: true,
+      calAdded60Day: true,
+      trainingComplete: true,
+      calAdded30Day: false,
+      keynoteComplete: false,
+      contractReceived: true,
+      w9: true,
+      headshot: false,
+      fullBody: false,
+      resume: true,
+      certifications: false,
+      addedToPromoFolder: false,
+      updatedIntroEmail: false,
+      updatedWebsite: false
+    },
+    agreement: {
+      sent: '2026-06-16',
+      received: '',
+      effective: '2026-07-01',
+      years: 3,
+      endDate: '2029-07-01'
+    },
+    coi: { received: true, expiryDate: '2027-06-05' },
+    training: {
+      mod1_recording: false, mod1_feedback: false,
+      mod7_inky: true, mod7_feedback: true,
+      mod8_quiz: true,
+      mod9_theme: false, mod9_feedback: false,
+      mod10_experiment: false, mod10_feedback: false,
+      mod12_theme2: false, mod12_feedback: false,
+      mod13_erin: false, mod13_feedback: false,
+      mod14_quiz: false,
+      mod15_hs: false, mod16_ms: false, mod17_additional: false
+    },
+    status: 'active'
+  },
+  {
+    id: 's4',
+    name: 'Abby Oluwanajuolasimi',
+    email: 'oluwanajuolasimia@gmail.com',
+    sentDate: '2025-09-29',
+    coiRequired: false,
+    onboarding: {
+      onboardEmailSent: true,
+      trainingPortalAccess: true,
+      speakerDriveAccess: false,
+      addedToEmailGroup: false,
+      calAdded60Day: false,
+      trainingComplete: false,
+      calAdded30Day: false,
+      keynoteComplete: false,
+      contractReceived: true,
+      w9: true,
+      headshot: true,
+      fullBody: true,
+      resume: true,
+      certifications: false,
+      addedToPromoFolder: false,
+      updatedIntroEmail: false,
+      updatedWebsite: false
+    },
+    agreement: {
+      sent: '',
+      received: '',
+      effective: '',
+      years: null,
+      endDate: ''
+    },
+    coi: { received: false, expiryDate: '' },
+    training: {
+      mod1_recording: true, mod1_feedback: true,
+      mod7_inky: false, mod7_feedback: false,
+      mod8_quiz: false,
+      mod9_theme: false, mod9_feedback: false,
+      mod10_experiment: false, mod10_feedback: false,
+      mod12_theme2: false, mod12_feedback: false,
+      mod13_erin: false, mod13_feedback: false,
+      mod14_quiz: false,
+      mod15_hs: false, mod16_ms: false, mod17_additional: false
+    },
+    status: 'on_hold'
+  }
+];
+
+const DEFAULT_OFFBOARDED = [
+  { id:'o1', name:'Larry Newkirk', email:'larrynewkirk7@gmail.com', date:'', thinkific:true, forms:true, files:true, emailGroup:true, website:true, pipedrive:true },
+  { id:'o2', name:'Denese Longsworth', email:'', date:'', thinkific:true, forms:true, files:true, emailGroup:true, website:true, pipedrive:true },
+  { id:'o3', name:'Magaly', email:'', date:'', thinkific:true, forms:true, files:true, emailGroup:true, website:true, pipedrive:true }
+];
+
+function loadData() {
+  try {
+    const s = localStorage.getItem('ts365_v9_speakers');
+    const o = localStorage.getItem('ts365_v9_offboarded');
+    return { speakers: s ? JSON.parse(s) : DEFAULT_SPEAKERS, offboarded: o ? JSON.parse(o) : DEFAULT_OFFBOARDED };
+  } catch(e) { return { speakers: DEFAULT_SPEAKERS, offboarded: DEFAULT_OFFBOARDED }; }
+}
+function save() {
+  localStorage.setItem('ts365_v9_speakers', JSON.stringify(data.speakers));
+  localStorage.setItem('ts365_v9_offboarded', JSON.stringify(data.offboarded));
+}
+
+let data = loadData();
+let offboardTarget = null;
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+
+function today() { return new Date().toISOString().split('T')[0]; }
+function daysUntil(d) { if (!d) return null; return Math.ceil((new Date(d) - new Date(today())) / 86400000); }
+function fmt(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function addYears(dateStr, yrs) {
+  if (!dateStr || !yrs) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setFullYear(d.getFullYear() + yrs);
+  return d.toISOString().split('T')[0];
+}
+function ck(v) { return v ? '✅' : '❌'; }
+
+function coiBadge(s) {
+  if (!s.coiRequired) return '<span class="badge na">N/A (Intern)</span>';
+  if (!s.coi.received) return '<span class="badge no">Not Submitted</span>';
+  if (!s.coi.expiryDate) return '<span class="badge yes">Received</span>';
+  const d = daysUntil(s.coi.expiryDate);
+  if (d < 0) return '<span class="badge no">EXPIRED</span>';
+  if (d <= 60) return '<span class="badge warn">Expires in ' + d + 'd</span>';
+  return '<span class="badge yes">Received</span>';
+}
+
+function coiExpiryBadge(s) {
+  if (!s.coiRequired) return '<span class="badge na">N/A</span>';
+  if (!s.coi.expiryDate) return '—';
+  const d = daysUntil(s.coi.expiryDate);
+  if (d < 0) return '<span class="text-red">' + fmt(s.coi.expiryDate) + ' (EXPIRED)</span>';
+  if (d <= 60) return '<span class="text-yellow">' + fmt(s.coi.expiryDate) + ' (' + d + 'd)</span>';
+  return '<span class="text-green">' + fmt(s.coi.expiryDate) + '</span>';
+}
+
+function agEndBadge(endDate) {
+  if (!endDate) return '—';
+  const d = daysUntil(endDate);
+  if (d < 0) return '<span class="text-red">' + fmt(endDate) + ' (EXPIRED)</span>';
+  if (d <= 90) return '<span class="text-yellow">' + fmt(endDate) + ' (' + d + 'd)</span>';
+  return fmt(endDate);
+}
+
+function deadlineBox(s) {
+  if (!s.sentDate) return '';
+  const deadline = addYears(s.sentDate.replace(/-\d{2}$/, m => m), 0);
+  // 60 days from sentDate
+  const d60 = new Date(s.sentDate + 'T12:00:00');
+  d60.setDate(d60.getDate() + 60);
+  const d60str = d60.toISOString().split('T')[0];
+  const days = daysUntil(d60str);
+  if (s.onboarding.trainingComplete) return '<div class="deadline-box ok">✅ Training portal completed on time.</div>';
+  let cls = 'ok', icon = '📅';
+  if (days < 0) { cls = 'overdue'; icon = '🚨'; }
+  else if (days <= 14) { cls = 'soon'; icon = '⚠️'; }
+  return `<div class="deadline-box ${cls}">${icon} 60-day training deadline: <strong>${fmt(d60str)}</strong>${days < 0 ? ' — OVERDUE' : days <= 14 ? ' — ' + days + ' days left' : ''}</div>`;
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  render();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+
+function render() {
+  renderDashboard();
+  renderOnboarding();
+  renderAgreements();
+  renderTraining();
+  renderOffboarding();
+}
+
+// DASHBOARD
+function renderDashboard() {
+  const alerts = [];
+  let coiIssues = 0, agIssues = 0;
+  const active = data.speakers.filter(s => s.status === 'active');
+  const onHold = data.speakers.filter(s => s.status === 'on_hold');
+
+  active.forEach(s => {
+    if (s.coiRequired && !s.coi.received) {
+      coiIssues++;
+      alerts.push({ cls:'red', msg:`${s.name} has not submitted a Certificate of Insurance.` });
+    } else if (s.coiRequired && s.coi.expiryDate) {
+      const d = daysUntil(s.coi.expiryDate);
+      if (d < 0) { coiIssues++; alerts.push({ cls:'red', msg:`${s.name}'s COI expired ${Math.abs(d)} days ago — request renewal now.` }); }
+      else if (d <= 60) { coiIssues++; alerts.push({ cls:'yellow', msg:`${s.name}'s COI expires in ${d} days (${fmt(s.coi.expiryDate)}) — request renewal.` }); }
+    }
+    if (s.agreement.endDate) {
+      const d = daysUntil(s.agreement.endDate);
+      if (d < 0) { agIssues++; alerts.push({ cls:'red', msg:`${s.name}'s agreement expired ${Math.abs(d)} days ago.` }); }
+      else if (d <= 90) { agIssues++; alerts.push({ cls:'yellow', msg:`${s.name}'s agreement ends in ${d} days (${fmt(s.agreement.endDate)}).` }); }
+    }
+    if (s.agreement.sent && !s.agreement.received) {
+      alerts.push({ cls:'yellow', msg:`Waiting on signed agreement back from ${s.name}.` });
+    }
+    const ob = s.onboarding;
+    const missing = [];
+    if (!ob.headshot) missing.push('headshot');
+    if (!ob.w9) missing.push('W9');
+    if (!ob.resume) missing.push('resume');
+    if (missing.length) alerts.push({ cls:'yellow', msg:`${s.name} is missing: ${missing.join(', ')}.` });
+  });
+
+  if (alerts.length === 0) alerts.push({ cls:'green', msg:'All speakers are on track. Nice work!' });
+
+  document.getElementById('dash-alerts').innerHTML = alerts.map(a =>
+    `<div class="alert ${a.cls}">${a.cls==='red'?'🚨':a.cls==='yellow'?'⚠️':'✅'} ${a.msg}</div>`
+  ).join('');
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${active.length}</div><div class="stat-label">Active Speakers</div></div>
+    <div class="stat-card"><div class="stat-num ${coiIssues?'red':''}">${coiIssues}</div><div class="stat-label">COI Issues</div></div>
+    <div class="stat-card"><div class="stat-num ${agIssues?'yellow':''}">${agIssues}</div><div class="stat-label">Agreement Alerts</div></div>
+    <div class="stat-card"><div class="stat-num">${onHold.length}</div><div class="stat-label">On Hold</div></div>
+    <div class="stat-card"><div class="stat-num">${data.offboarded.length}</div><div class="stat-label">Offboarded</div></div>
+  `;
+
+  document.getElementById('dash-tbody').innerHTML = active.map(s => `
+    <tr>
+      <td><strong>${s.name}</strong><br><span class="text-muted" style="font-size:.75rem">${s.email}</span></td>
+      <td>${fmt(s.agreement.sent)}</td>
+      <td>${fmt(s.agreement.effective)}</td>
+      <td>${agEndBadge(s.agreement.endDate)}</td>
+      <td>${s.agreement.received ? '<span class="badge yes">'+fmt(s.agreement.received)+'</span>' : (s.agreement.sent ? '<span class="badge pending">Pending</span>' : '—')}</td>
+      <td>${coiBadge(s)}</td>
+      <td>${coiExpiryBadge(s)}</td>
+    </tr>`).join('');
+
+  // On Hold section
+  const holdEl = document.getElementById('dash-onhold');
+  if (onHold.length) {
+    holdEl.innerHTML = `
+      <div class="section-title" style="margin-top:28px;color:#aaa;">On Hold</div>
+      <div class="dash-table-wrap" style="opacity:.6;">
+        <table>
+          <thead><tr>
+            <th>Speaker</th><th>Agreement Sent</th><th>Agreement Effective</th>
+            <th>Agreement End</th><th>Agreement Received</th><th>COI</th><th>COI Expiry</th>
+          </tr></thead>
+          <tbody>${onHold.map(s => `
+            <tr>
+              <td><strong>${s.name}</strong><br><span class="text-muted" style="font-size:.75rem">${s.email}</span><br><span class="badge na" style="margin-top:3px;">On Hold</span></td>
+              <td><span class="badge na">N/A</span></td><td><span class="badge na">N/A</span></td>
+              <td><span class="badge na">N/A</span></td><td><span class="badge na">N/A</span></td>
+              <td><span class="badge na">N/A</span></td><td><span class="badge na">N/A</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } else {
+    holdEl.innerHTML = '';
+  }
+}
+
+// ONBOARDING
+function renderOnboarding() {
+  const onHold = data.speakers.filter(s => s.status === 'on_hold');
+  const holdEl = document.getElementById('onhold-section');
+  if (onHold.length) {
+    holdEl.innerHTML = `
+      <div class="section-title" style="margin-top:32px;color:#aaa;display:flex;align-items:center;gap:10px;">
+        ⏸ On Hold
+        <span style="font-size:.78rem;font-weight:400;color:#bbb;">These speakers are paused — no action needed.</span>
+      </div>
+      <div class="speaker-grid">
+        ${onHold.map(s => `
+          <div class="speaker-card" style="opacity:.6;border:2px dashed #ddd;">
+            <div class="card-header">
+              <div class="card-name">${s.name} <span class="badge na" style="font-size:.7rem;">On Hold</span></div>
+              <div class="card-email">${s.email}</div>
+              <div class="card-meta">Start Date: ${fmt(s.sentDate)}</div>
+            </div>
+            <div class="card-body" style="color:#aaa;font-size:.85rem;padding:20px;">
+              All tracking paused. Reactivate when ready.
+            </div>
+            <div class="card-footer">
+              <button class="btn-sm btn-primary" onclick="toggleHold('${s.id}')">▶ Reactivate</button>
+              <button class="btn-sm btn-danger" onclick="showTab('offboarding');selectOffboardSpeaker('${s.id}')">Offboard</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    holdEl.innerHTML = '';
+  }
+  const speakers = data.speakers.filter(s => s.status !== 'on_hold');
+  document.getElementById('onboarding-cards').innerHTML = speakers.map(s => {
+    const ob = s.onboarding;
+    const speakerChecks = [
+      ['onboardEmailSent','Sent Onboarding Email'],
+      ['trainingPortalAccess','Gave Access to Training Portal'],
+      ['speakerDriveAccess','Gave Access to Speaker Drive'],
+      ['addedToEmailGroup','Added to Email Group (Gmail)'],
+      ['calAdded60Day','Added 60-Day Deadline to Complete Training Portal on Google Cal'],
+      ['trainingComplete','Training Portal Complete (60 days)'],
+      ['calAdded30Day','Added 30-Day Deadline to Complete Keynote on Google Cal'],
+      ['contractReceived','Contract Received (Signed)'],
+      ['w9','W9 Received'],
+      ['headshot','Headshot Received'],
+      ['fullBody','Full Body Photo Received'],
+      ['resume','Resume Received'],
+      ['certifications','Certifications Received']
+    ];
+    const erinChecks = [
+      ['addedToPromoFolder','Added to Promotional Folder'],
+      ['updatedIntroEmail','Updated Intro Email'],
+      ['updatedWebsite','Updated Website']
+    ];
+    const allChecks = [...speakerChecks, ...erinChecks];
+    const done = allChecks.filter(([k]) => ob[k]).length;
+    const erinDone = erinChecks.filter(([k]) => ob[k]).length;
+    return `<div class="speaker-card">
+      <div class="card-header">
+        <div class="card-name">${s.name}</div>
+        <div class="card-email">${s.email}</div>
+        <div class="card-meta">Start Date: ${fmt(s.sentDate)} &nbsp;|&nbsp; ${done}/${allChecks.length} complete</div>
+      </div>
+      <div class="card-body">
+        ${deadlineBox(s)}
+        <div class="checklist">
+          ${speakerChecks.map(([k,label]) => `
+            <div class="check-item ${ob[k]?'done':''}">
+              <input type="checkbox" id="${s.id}_ob_${k}" ${ob[k]?'checked':''} onchange="toggleField('${s.id}','onboarding','${k}',this.checked)">
+              <label for="${s.id}_ob_${k}">${label}</label>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:14px;background:#f0f4ff;border-radius:8px;padding:12px 14px;border-left:3px solid #3949ab;">
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#3949ab;margin-bottom:8px;">
+            🎯 Erin's Action Items
+          </div>
+          <div class="checklist">
+            ${erinChecks.map(([k,label]) => `
+              <div class="check-item ${ob[k]?'done':''}">
+                <input type="checkbox" id="${s.id}_ob_${k}" ${ob[k]?'checked':''} onchange="toggleField('${s.id}','onboarding','${k}',this.checked)">
+                <label for="${s.id}_ob_${k}">${k==='addedToPromoFolder'?`<a href="https://drive.google.com/drive/folders/1x50hnE_7VSCbqaQWU8xI7rgXYd0kO9UM" target="_blank" style="color:inherit;">${label} ↗</a>`:label}</label>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-sm btn-ghost" onclick="toggleHold('${s.id}')">⏸ Put On Hold</button>
+        <button class="btn-sm btn-danger" onclick="showTab('offboarding');selectOffboardSpeaker('${s.id}')">Offboard Speaker</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// AGREEMENTS
+function renderAgreements() {
+  const speakers = data.speakers.filter(s => s.status !== 'on_hold');
+  document.getElementById('agreement-cards').innerHTML = speakers.map(s => {
+    const agDays = s.agreement.endDate ? daysUntil(s.agreement.endDate) : null;
+    const coiDays = s.coi.expiryDate ? daysUntil(s.coi.expiryDate) : null;
+    const needCoiReminder = s.coiRequired && (!s.coi.received || (coiDays !== null && coiDays <= 60));
+
+    return `<div class="speaker-card">
+      <div class="card-header">
+        <div class="card-name">${s.name}</div>
+        <div class="card-email">${s.email}</div>
+      </div>
+      <div class="card-body">
+        <div class="section-label">Agreement</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="lbl">Sent</span><span class="val">${fmt(s.agreement.sent)}</span></div>
+          <div class="info-item"><span class="lbl">Received</span>
+            <span class="val">${s.agreement.received ? fmt(s.agreement.received) : '<span class="badge pending">Pending</span>'}</span>
+          </div>
+          <div class="info-item"><span class="lbl">Effective Date</span><span class="val">${fmt(s.agreement.effective)}</span></div>
+          <div class="info-item"><span class="lbl">End Date</span><span class="val">${agEndBadge(s.agreement.endDate)}</span></div>
+          <div class="info-item"><span class="lbl">Length</span><span class="val">${s.agreement.years ? s.agreement.years + ' year(s)' : '—'}</span></div>
+        </div>
+        <div class="edit-row" style="margin-top:10px;">
+          <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px;">
+            <span style="font-size:.7rem;color:#aaa;text-transform:uppercase;">Sent Date</span>
+            <input type="date" value="${s.agreement.sent||''}" onchange="updateAgreementField('${s.id}','sent',this.value)">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px;">
+            <span style="font-size:.7rem;color:#aaa;text-transform:uppercase;">Received Date</span>
+            <input type="date" value="${s.agreement.received||''}" onchange="updateAgreementField('${s.id}','received',this.value)">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px;">
+            <span style="font-size:.7rem;color:#aaa;text-transform:uppercase;">Effective Date</span>
+            <input type="date" value="${s.agreement.effective||''}" onchange="updateAgreementDates('${s.id}','effective',this.value)">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:.7rem;color:#aaa;text-transform:uppercase;">Years</span>
+            <select onchange="updateAgreementDates('${s.id}','years',this.value)">
+              <option value="">—</option>
+              ${[1,2,3,5].map(y=>`<option value="${y}" ${s.agreement.years==y?'selected':''}>${y}yr</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="section-label">Certificate of Insurance</div>
+        ${!s.coiRequired ? '<div><span class="badge na">Not Required (Intern)</span></div>' : `
+          <div class="info-grid">
+            <div class="info-item"><span class="lbl">Received</span><span class="val">${coiBadge(s)}</span></div>
+            <div class="info-item"><span class="lbl">Expiry</span><span class="val">${coiExpiryBadge(s)}</span></div>
+          </div>
+          <div class="edit-row" style="margin-top:8px;">
+            <label><input type="checkbox" ${s.coi.received?'checked':''} onchange="toggleField('${s.id}','coi','received',this.checked)"> Received</label>
+            <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:130px;">
+              <span style="font-size:.7rem;color:#aaa;text-transform:uppercase;">Expiry Date</span>
+              <input type="date" value="${s.coi.expiryDate||''}" onchange="toggleField('${s.id}','coi','expiryDate',this.value)">
+            </div>
+          </div>
+          ${needCoiReminder ? `<button class="btn-remind" style="margin-top:10px;" onclick="sendCOIReminder('${s.id}')">📧 Send COI Renewal Reminder</button>` : ''}
+          <div style="margin-top:8px;"><a href="${COI_FOLDER}" target="_blank" class="link-btn">📁 View COI Drive Folder</a></div>
+        `}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// TRAINING
+function renderTraining() {
+  const speakers = data.speakers.filter(s => s.status !== 'on_hold');
+  const MODULES = [
+    { num:1, title:'Module 1 — Reflection Recording', checks:[
+      ['mod1_recording','Short Recording Submitted'],['mod1_feedback','Feedback Sent']
+    ]},
+    { num:7, title:'Module 7 — Inky Johnson "Broke the Internet"', checks:[
+      ['mod7_inky','Assignment Submitted'],['mod7_feedback','Feedback Sent']
+    ]},
+    { num:8, title:'Module 8 — Quiz', checks:[
+      ['mod8_quiz','Quiz Score Emailed']
+    ]},
+    { num:9, title:'Module 9 — 3 Theme Focus (Strategies 1-3)', checks:[
+      ['mod9_theme','Theme Focus Submitted'],['mod9_feedback','Feedback Sent']
+    ]},
+    { num:10, title:'Module 10 — Mini Social Experiment', checks:[
+      ['mod10_experiment','Mini Social Experiment Report Submitted'],['mod10_feedback','Feedback Given']
+    ]},
+    { num:12, title:'Module 12 — Theme Focus (Strategies 4-5)', checks:[
+      ['mod12_theme2','Theme Focus Submitted'],['mod12_feedback','Feedback Sent']
+    ]},
+    { num:13, title:'Module 13 — Erin Pompa "Awakening Your Warrior Spirit"', checks:[
+      ['mod13_erin','Assignment Submitted'],['mod13_feedback','Feedback Sent']
+    ]},
+    { num:14, title:'Module 14 — Final Quiz', checks:[
+      ['mod14_quiz','Quiz Score Emailed']
+    ]},
+    { num:15, title:'Module 15 — High School Assembly', checks:[
+      ['mod15_hs','High School Assembly Complete']
+    ]},
+    { num:16, title:'Module 16 — Middle School Assembly', checks:[
+      ['mod16_ms','Middle School Assembly Complete']
+    ]},
+    { num:17, title:'Module 17 — Additional Presentations', checks:[
+      ['mod17_additional','Additional Presentations Complete']
+    ]}
+  ];
+
+  document.getElementById('training-cards').innerHTML = speakers.map(s => {
+    const total = MODULES.reduce((acc,m) => acc + m.checks.length, 0);
+    const done = MODULES.reduce((acc,m) => acc + m.checks.filter(([k]) => s.training[k]).length, 0);
+    const pct = Math.round(done/total*100);
+
+    const moduleRows = MODULES.map(m => {
+      const mDone = m.checks.filter(([k]) => s.training[k]).length;
+      const mTotal = m.checks.length;
+      const cls = mDone === mTotal ? 'complete' : mDone > 0 ? 'partial' : 'pending';
+      return `<div class="module-row ${cls}">
+        <div class="module-header">
+          <span class="module-title">${m.title}</span>
+          <span class="module-progress">${mDone}/${mTotal}</span>
+        </div>
+        <div class="module-checks">
+          ${m.checks.map(([k,label]) => `
+            <div class="check-item ${s.training[k]?'done':''}">
+              <input type="checkbox" id="${s.id}_tr_${k}" ${s.training[k]?'checked':''} onchange="toggleField('${s.id}','training','${k}',this.checked)">
+              <label for="${s.id}_tr_${k}">${label}</label>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="speaker-card">
+      <div class="card-header">
+        <div class="card-name">${s.name}</div>
+        <div class="card-email">${s.email}</div>
+        <div class="card-meta" style="margin-top:6px;">
+          <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${pct===100?'#27ae60':pct>50?'#f39c12':'#c0392b'};border-radius:3px;transition:width .3s;"></div>
+          </div>
+          <span style="font-size:.72rem;color:#888;">${done}/${total} tasks complete (${pct}%)</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="module-list">${moduleRows}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// OFFBOARDING TAB
+let selectedOffboardId = null;
+
+function renderOffboarding() {
+  const active = data.speakers.filter(s => s.status !== 'on_hold');
+
+  // Speaker selector
+  document.getElementById('offboard-speaker-select').innerHTML = active.map(s => `
+    <button onclick="selectOffboardSpeaker('${s.id}')"
+      style="padding:10px 18px;border-radius:8px;border:2px solid ${selectedOffboardId===s.id?'#c0392b':'#ddd'};
+             background:${selectedOffboardId===s.id?'#c0392b':'white'};
+             color:${selectedOffboardId===s.id?'white':'#333'};
+             font-weight:600;font-size:.88rem;cursor:pointer;">
+      ${s.name}
+    </button>`).join('');
+
+  // Checklist
+  const view = document.getElementById('offboard-checklist-view');
+  if (!selectedOffboardId) {
+    view.innerHTML = '<div style="color:#bbb;font-size:.9rem;padding:20px 0;">Select a speaker above to begin offboarding.</div>';
+  } else {
+    const s = data.speakers.find(x => x.id === selectedOffboardId);
+    if (!s) { view.innerHTML = ''; return; }
+    view.innerHTML = `
+      <div style="background:white;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;max-width:600px;">
+        <div style="background:#1a1a2e;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="color:white;font-weight:700;font-size:1rem;">${s.name}</div>
+            <div style="color:rgba(255,255,255,.6);font-size:.78rem;">${s.email}</div>
+          </div>
+          <button class="btn-sm btn-danger" onclick="executeOffboard('${s.id}')">✓ Confirm Offboard</button>
+        </div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:8px;">
+          ${OFFBOARD_STEPS.map((step, i) => `
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:#f9f8f6;border-radius:8px;" id="obrow_${s.id}_${i}">
+              <input type="checkbox" id="obck_${s.id}_${i}"
+                style="accent-color:#c0392b;width:16px;height:16px;cursor:pointer;flex-shrink:0;"
+                onchange="markStep('${s.id}',${i},this.checked)">
+              <label for="obck_${s.id}_${i}" style="font-size:.85rem;color:#333;cursor:pointer;">${step.label}</label>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // Build history table header from OFFBOARD_STEPS
+  document.getElementById('offboard-thead').innerHTML = `<tr>
+    <th>Name</th><th>Email</th><th>Offboard Date</th>
+    ${OFFBOARD_STEPS.map(s => `<th style="font-size:.7rem;">${s.label}</th>`).join('')}
+  </tr>`;
+
+  // History — editable checkboxes per step
+  const tbody = document.getElementById('offboard-tbody');
+  if (!data.offboarded.length) {
+    tbody.innerHTML = `<tr><td colspan="${3 + OFFBOARD_STEPS.length}" style="text-align:center;color:#bbb;padding:24px;">No offboarded speakers yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.offboarded.map(o => {
+    if (!o.steps) o.steps = {};
+    const stepCells = OFFBOARD_STEPS.map((step, i) => {
+      const checked = !!o.steps[step.key];
+      return `<td style="text-align:center;">
+        <input type="checkbox" ${checked?'checked':''} style="accent-color:#27ae60;width:15px;height:15px;cursor:pointer;"
+          onchange="updateHistoryStep('${o.id}','${step.key}',this.checked)">
+      </td>`;
+    }).join('');
+    return `<tr>
+      <td><strong>${o.name}</strong></td>
+      <td>${o.email||'—'}</td>
+      <td><input type="date" value="${o.date||''}" style="border:1px solid #ddd;border-radius:5px;padding:4px 6px;font-size:.8rem;cursor:pointer;"
+        onchange="updateOffboardDate('${o.id}',this.value)"></td>
+      ${stepCells}
+    </tr>`;
+  }).join('');
+}
+
+function selectOffboardSpeaker(id) {
+  selectedOffboardId = id;
+  renderOffboarding();
+}
+
+function markStep(speakerId, idx, checked) {
+  const row = document.getElementById(`obrow_${speakerId}_${idx}`);
+  if (row) {
+    row.style.background = checked ? '#eafaf1' : '#f9f8f6';
+    const label = row.querySelector('label');
+    if (label) { label.style.textDecoration = checked?'line-through':'none'; label.style.color = checked?'#aaa':'#333'; }
+  }
+}
+
+function updateHistoryStep(offboardId, key, checked) {
+  const o = data.offboarded.find(x => x.id === offboardId);
+  if (!o) return;
+  if (!o.steps) o.steps = {};
+  o.steps[key] = checked;
+  save();
+}
+
+function updateOffboardDate(offboardId, val) {
+  const o = data.offboarded.find(x => x.id === offboardId);
+  if (!o) return;
+  o.date = val;
+  save();
+}
+
+function executeOffboard(id) {
+  const allBoxes = document.querySelectorAll(`[id^="obck_${id}_"]`);
+  const unchecked = [...allBoxes].filter(b => !b.checked).length;
+  if (unchecked && !confirm(`${unchecked} step(s) not yet checked off. Offboard anyway?`)) return;
+  const s = data.speakers.find(x => x.id === id);
+  if (!s) return;
+  const steps = {};
+  OFFBOARD_STEPS.forEach((step, i) => {
+    steps[step.key] = !!(document.getElementById(`obck_${id}_${i}`) || {}).checked;
+  });
+  data.offboarded.push({ id:'o_'+Date.now(), name:s.name, email:s.email, date:today(), steps });
+  data.speakers = data.speakers.filter(x => x.id !== id);
+  selectedOffboardId = null;
+  save(); render();
+}
+
+// ─── FIELD UPDATES ─────────────────────────────────────────────────────────────
+
+function toggleField(id, section, key, val) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s) return;
+  s[section][key] = val;
+  save(); render();
+}
+
+function updateAgreementField(id, key, val) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s) return;
+  s.agreement[key] = val;
+  save(); render();
+}
+
+function updateAgreementDates(id, key, val) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s) return;
+  if (key === 'years') s.agreement.years = parseInt(val) || null;
+  else s.agreement[key] = val;
+  if (s.agreement.effective && s.agreement.years) {
+    s.agreement.endDate = addYears(s.agreement.effective, s.agreement.years);
+  }
+  save(); render();
+}
+
+// ─── COI REMINDER ─────────────────────────────────────────────────────────────
+
+function sendCOIReminder(id) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s) return;
+  const sub = encodeURIComponent('Certificate of Insurance — Action Needed | TruthSpeaks 365');
+  const expired = s.coi.expiryDate && daysUntil(s.coi.expiryDate) < 0;
+  const body = encodeURIComponent(
+    `Hi ${s.name.split(' ')[0]},\n\n` +
+    (s.coi.received
+      ? `Your Certificate of Insurance ${expired ? 'has expired' : 'is expiring soon'} (${fmt(s.coi.expiryDate)}). Please send your updated COI to erin@erinpompa.com as soon as possible.`
+      : `We have not yet received your Certificate of Insurance. Please send it to erin@erinpompa.com at your earliest convenience.`) +
+    `\n\nThank you!\nErin Pompa\nTruthSpeaks 365`
+  );
+  window.open(`mailto:${s.email}?subject=${sub}&body=${body}`);
+}
+
+// ─── OFFBOARD MODAL ───────────────────────────────────────────────────────────
+
+const OFFBOARD_STEPS = [
+  { key: 'trainingPortal', label: 'Training Portal Access Revoked' },
+  { key: 'speakerDrive',   label: 'Speaker Drive Access Revoked' },
+  { key: 'emailGroup',     label: 'Removed from Email Group' },
+  { key: 'promoFolder',    label: 'Removed from Promotional Folder' },
+  { key: 'introEmail',     label: 'Removed from Intro Email' },
+  { key: 'website',        label: 'Removed from Website' }
+];
+// Dashboard, onboarding, agreement/COI, and training are removed automatically on confirm offboard
+
+// openOffboardModal / confirmOffboard removed — offboarding is now inline on the Offboarding tab
+
+// ─── ADD SPEAKER ──────────────────────────────────────────────────────────────
+
+function openAddModal() { document.getElementById('add-modal').classList.add('open'); }
+
+function addSpeaker() {
+  const name = document.getElementById('new-name').value.trim();
+  const email = document.getElementById('new-email').value.trim();
+  if (!name || !email) { alert('Name and email are required.'); return; }
+  const startDate = document.getElementById('new-start').value;
+  const agSent = document.getElementById('new-ag-sent').value;
+  const agEff = document.getElementById('new-ag-eff').value;
+  const agYears = parseInt(document.getElementById('new-ag-years').value) || null;
+  const agEnd = agEff && agYears ? addYears(agEff, agYears) : '';
+  const coiReq = document.getElementById('new-coi-req').value === 'true';
+  const coiExp = document.getElementById('new-coi-exp').value;
+  data.speakers.push({
+    id:'s_'+Date.now(), name, email,
+    sentDate: startDate || today(),
+    coiRequired: coiReq,
+    onboarding:{ onboardEmailSent:false,trainingPortalAccess:false,calAdded60Day:false,trainingComplete:false,contractReceived:false,w9:false,headshot:false,fullBody:false,resume:false,certifications:false },
+    agreement:{ sent:agSent, received:'', effective:agEff, years:agYears, endDate:agEnd },
+    coi:{ received:false, expiryDate:coiExp },
+    training:{ mod1_recording:false,mod1_feedback:false,mod7_inky:false,mod7_feedback:false,mod8_quiz:false,mod9_theme:false,mod9_feedback:false,mod10_experiment:false,mod10_feedback:false,mod12_theme2:false,mod12_feedback:false,mod13_erin:false,mod13_feedback:false,mod14_quiz:false },
+    status:'active'
+  });
+  save();
+  closeModal('add-modal');
+  render();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toggleHold(id) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s) return;
+  s.status = s.status === 'on_hold' ? 'active' : 'on_hold';
+  save(); render();
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+render();
+</script>
+</body>
+</html>
