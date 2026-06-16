@@ -480,6 +480,36 @@ const DEFAULT_OFFBOARDED = [
   { id:'o3', name:'Magaly', email:'', date:'', thinkific:true, forms:true, files:true, emailGroup:true, website:true, pipedrive:true }
 ];
 
+// ─── SUPABASE CLOUD SYNC ─────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://tnyfkebrzdqmbaijvhoz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRueWZrZWJyemRxbWJhaWp2aG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MjkxMTUsImV4cCI6MjA5NzIwNTExNX0.6DSNI8SKsaOKcTgmJ1IDzLXD_YgDj5lgEeWhpkwERAY';
+
+async function loadFromCloud() {
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/portal_data?id=eq.main&select=data`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const rows = await resp.json();
+    if (rows && rows.length > 0 && rows[0].data) return rows[0].data;
+  } catch(e) { console.warn('Cloud load failed'); }
+  return null;
+}
+
+async function saveToCloud() {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/portal_data?id=eq.main`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ data: { speakers: data.speakers, offboarded: data.offboarded }, updated_at: new Date().toISOString() })
+    });
+  } catch(e) { console.warn('Cloud save failed'); }
+}
+
 function loadData() {
   try {
     const s = localStorage.getItem('ts365_v9_speakers');
@@ -487,12 +517,33 @@ function loadData() {
     return { speakers: s ? JSON.parse(s) : DEFAULT_SPEAKERS, offboarded: o ? JSON.parse(o) : DEFAULT_OFFBOARDED };
   } catch(e) { return { speakers: DEFAULT_SPEAKERS, offboarded: DEFAULT_OFFBOARDED }; }
 }
+
 function save() {
   localStorage.setItem('ts365_v9_speakers', JSON.stringify(data.speakers));
   localStorage.setItem('ts365_v9_offboarded', JSON.stringify(data.offboarded));
+  saveToCloud();
 }
 
 let data = loadData();
+
+// On startup: load from cloud and refresh UI
+loadFromCloud().then(cloudData => {
+  if (cloudData) {
+    const hasCloudSpeakers = Array.isArray(cloudData.speakers) && cloudData.speakers.length > 0;
+    const hasCloudOffboarded = Array.isArray(cloudData.offboarded) && cloudData.offboarded.length > 0;
+    if (hasCloudSpeakers || hasCloudOffboarded) {
+      data = { speakers: cloudData.speakers || [], offboarded: cloudData.offboarded || [] };
+      localStorage.setItem('ts365_v9_speakers', JSON.stringify(data.speakers));
+      localStorage.setItem('ts365_v9_offboarded', JSON.stringify(data.offboarded));
+    } else {
+      // Cloud is empty — push our local data up
+      saveToCloud();
+    }
+  } else {
+    saveToCloud();
+  }
+  render();
+});
 let offboardTarget = null;
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
