@@ -955,7 +955,7 @@ function renderTraining() {
 let selectedOffboardId = null;
 
 function renderOffboarding() {
-  const active = data.speakers.filter(s => s.status !== 'on_hold');
+  const active = data.speakers; // include on-hold so they can be offboarded
 
   // Speaker selector
   document.getElementById('offboard-speaker-select').innerHTML = active.map(s => `
@@ -1115,12 +1115,17 @@ function sendCOIReminder(id) {
 // ─── OFFBOARD MODAL ───────────────────────────────────────────────────────────
 
 const OFFBOARD_STEPS = [
-  { key: 'trainingPortal', label: 'Training Portal Access Revoked' },
-  { key: 'speakerDrive',   label: 'Speaker Drive Access Revoked' },
-  { key: 'emailGroup',     label: 'Removed from Email Group' },
-  { key: 'promoFolder',    label: 'Removed from Promotional Folder' },
-  { key: 'introEmail',     label: 'Removed from Intro Email' },
-  { key: 'website',        label: 'Removed from Website' }
+  { key: 'trainingPortal',       label: 'Training Portal Access Revoked' },
+  { key: 'speakerDrive',         label: 'Speaker Drive Access Revoked' },
+  { key: 'emailGroup',           label: 'Removed from Email Group' },
+  { key: 'promoFolder',          label: 'Removed from Promotional Folder' },
+  { key: 'introEmail',           label: 'Removed from Intro Email' },
+  { key: 'website',              label: 'Removed from Website' },
+  { key: 'headshots',            label: 'Headshots Removed from Drive' },
+  { key: 'fullBodyImages',       label: 'Full Body Images Removed from Drive' },
+  { key: 'resume',               label: 'Resume Removed from Drive' },
+  { key: 'coiRemoved',           label: 'Certificate of Insurance Removed from Drive' },
+  { key: 'certifications',       label: 'Professional Certifications Removed from Drive' }
 ];
 // Dashboard, onboarding, agreement/COI, and training are removed automatically on confirm offboard
 
