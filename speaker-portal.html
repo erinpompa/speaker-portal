@@ -310,8 +310,8 @@ const DEFAULT_SPEAKERS = [
       resume: true,
       certifications: true,
       addedToPromoFolder: false,
-      updatedIntroEmail: false,
-      updatedWebsite: false
+      updatedIntroEmailYouth: false, updatedIntroEmailAdult: false,
+      updatedWebsite: false, pipedriveTag: false
     },
     agreement: {
       sent: '2026-06-16',
@@ -356,8 +356,8 @@ const DEFAULT_SPEAKERS = [
       resume: true,
       certifications: true,
       addedToPromoFolder: false,
-      updatedIntroEmail: false,
-      updatedWebsite: false
+      updatedIntroEmailYouth: false, updatedIntroEmailAdult: false,
+      updatedWebsite: false, pipedriveTag: false
     },
     agreement: {
       sent: '',
@@ -402,8 +402,8 @@ const DEFAULT_SPEAKERS = [
       resume: true,
       certifications: false,
       addedToPromoFolder: false,
-      updatedIntroEmail: false,
-      updatedWebsite: false
+      updatedIntroEmailYouth: false, updatedIntroEmailAdult: false,
+      updatedWebsite: false, pipedriveTag: false
     },
     agreement: {
       sent: '2026-06-16',
@@ -448,8 +448,8 @@ const DEFAULT_SPEAKERS = [
       resume: true,
       certifications: false,
       addedToPromoFolder: false,
-      updatedIntroEmail: false,
-      updatedWebsite: false
+      updatedIntroEmailYouth: false, updatedIntroEmailAdult: false,
+      updatedWebsite: false, pipedriveTag: false
     },
     agreement: {
       sent: '',
@@ -761,8 +761,10 @@ function renderOnboarding() {
     ];
     const erinChecks = [
       ['addedToPromoFolder','Added to Promotional Folder'],
-      ['updatedIntroEmail','Updated Intro Email'],
-      ['updatedWebsite','Updated Website']
+      ['updatedIntroEmailYouth','Updated Intro Email — Youth'],
+      ['updatedIntroEmailAdult','Updated Intro Email — Adult'],
+      ['updatedWebsite','Updated Website'],
+      ['pipedriveTag','Tag Updated in Pipedrive to TruthSpeaks 365 Presenter']
     ];
     const allChecks = [...speakerChecks, ...erinChecks];
     const done = allChecks.filter(([k]) => ob[k]).length;
