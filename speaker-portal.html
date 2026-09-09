@@ -580,9 +580,21 @@ function coiExpiryBadge(s) {
   if (!s.coiRequired) return '<span class="badge na">N/A</span>';
   if (!s.coi.expiryDate) return '—';
   const d = daysUntil(s.coi.expiryDate);
-  if (d < 0) return '<span class="text-red">' + fmt(s.coi.expiryDate) + ' (EXPIRED)</span>';
-  if (d <= 60) return '<span class="text-yellow">' + fmt(s.coi.expiryDate) + ' (' + d + 'd)</span>';
-  return '<span class="text-green">' + fmt(s.coi.expiryDate) + '</span>';
+  if (d < 0) return '<span style="color:#ff4d4d;font-weight:700;">🔴 ' + fmt(s.coi.expiryDate) + ' — EXPIRED</span>';
+  if (d <= 7)  return '<span style="color:#ff4d4d;font-weight:700;">🔴 ' + fmt(s.coi.expiryDate) + ' (' + d + 'd left)</span>';
+  if (d <= 30) return '<span style="color:#ffaa00;font-weight:700;">🟡 ' + fmt(s.coi.expiryDate) + ' (' + d + 'd left)</span>';
+  if (d <= 60) return '<span style="color:#f0c040;font-weight:600;">🟡 ' + fmt(s.coi.expiryDate) + ' (' + d + 'd left)</span>';
+  return '<span style="color:#4caf50;font-weight:600;">🟢 ' + fmt(s.coi.expiryDate) + '</span>';
+}
+
+function coiSectionBg(s) {
+  if (!s.coiRequired || !s.coi.expiryDate) return '';
+  const d = daysUntil(s.coi.expiryDate);
+  if (d < 0)   return 'background:rgba(255,77,77,0.12);border-left:3px solid #ff4d4d;';
+  if (d <= 7)  return 'background:rgba(255,77,77,0.10);border-left:3px solid #ff4d4d;';
+  if (d <= 30) return 'background:rgba(255,170,0,0.12);border-left:3px solid #ffaa00;';
+  if (d <= 60) return 'background:rgba(240,192,64,0.10);border-left:3px solid #f0c040;';
+  return 'background:rgba(76,175,80,0.08);border-left:3px solid #4caf50;';
 }
 
 function agEndBadge(endDate) {
@@ -853,6 +865,7 @@ function renderAgreements() {
 
         <div class="section-label">Certificate of Insurance</div>
         ${!s.coiRequired ? '<div><span class="badge na">Not Required (Intern)</span></div>' : `
+          <div style="padding:8px;border-radius:6px;${coiSectionBg(s)}">
           <div class="info-grid">
             <div class="info-item"><span class="lbl">Received</span><span class="val">${coiBadge(s)}</span></div>
             <div class="info-item"><span class="lbl">Expiry</span><span class="val">${coiExpiryBadge(s)}</span></div>
@@ -864,8 +877,10 @@ function renderAgreements() {
               <input type="date" value="${s.coi.expiryDate||''}" onchange="toggleField('${s.id}','coi','expiryDate',this.value)">
             </div>
           </div>
-          ${needCoiReminder ? `<button class="btn-remind" style="margin-top:10px;" onclick="sendCOIReminder('${s.id}')">📧 Send COI Renewal Reminder</button>` : ''}
+          ${s.coi.expiryDate ? `<button class="btn-remind" style="margin-top:10px;background:#1976d2;" onclick="createCOIReminders('${s.id}')">📅 Set COI Calendar Reminders</button>` : ''}
+          ${needCoiReminder ? `<button class="btn-remind" style="margin-top:6px;" onclick="sendCOIReminder('${s.id}')">📧 Send COI Renewal Reminder</button>` : ''}
           <div style="margin-top:8px;"><a href="${COI_FOLDER}" target="_blank" class="link-btn">📁 View COI Drive Folder</a></div>
+          </div>
         `}
       </div>
     </div>`;
@@ -1097,6 +1112,28 @@ function updateAgreementDates(id, key, val) {
   save(); render();
 }
 
+// ─── COI CALENDAR REMINDERS ───────────────────────────────────────────────────
+
+function createCOIReminders(id) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s || !s.coi.expiryDate) { alert('No COI expiry date set for this speaker.'); return; }
+  const exp = new Date(s.coi.expiryDate + 'T12:00:00');
+  function gcalDate(d) { return d.toISOString().replace(/[-:]/g,'').substring(0,8); }
+  function offsetDate(d, days) { const r = new Date(d); r.setDate(r.getDate() + days); return r; }
+  const events = [
+    { d: offsetDate(exp,-60), title:`📋 ${s.name} — COI Expiring in 60 Days` },
+    { d: offsetDate(exp,-30), title:`📋 ${s.name} — COI Expiring in 1 Month` },
+    { d: offsetDate(exp,-7),  title:`📋 ${s.name} — COI Expiring in 1 Week` },
+    { d: exp,                 title:`🔴 ${s.name} — COI Expires Today` }
+  ];
+  const details = encodeURIComponent(`TruthSpeaks 365 — COI reminder for ${s.name} (${s.email}). Expiry: ${fmt(s.coi.expiryDate)}`);
+  events.forEach(ev => {
+    const ds = gcalDate(ev.d);
+    const de = gcalDate(offsetDate(ev.d, 1));
+    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${ds}/${de}&details=${details}`, '_blank');
+  });
+}
+
 // ─── COI REMINDER ─────────────────────────────────────────────────────────────
 
 function sendCOIReminder(id) {
@@ -1158,9 +1195,17 @@ function addSpeaker() {
     training:{ mod1_recording:false,mod1_feedback:false,mod7_inky:false,mod7_feedback:false,mod8_quiz:false,mod9_theme:false,mod9_feedback:false,mod10_experiment:false,mod10_feedback:false,mod12_theme2:false,mod12_feedback:false,mod13_erin:false,mod13_feedback:false,mod14_quiz:false },
     status:'active'
   });
+  const newId = data.speakers[data.speakers.length - 1].id;
   save();
   closeModal('add-modal');
   render();
+  if (coiExp) {
+    setTimeout(() => {
+      if (confirm(`${name} added! Create COI calendar reminders now?\n\n📅 This will open 4 Google Calendar events:\n• 60 days before expiry\n• 1 month before\n• 1 week before\n• Expiry date\n\nAllow pop-ups if prompted.`)) {
+        createCOIReminders(newId);
+      }
+    }, 300);
+  }
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
