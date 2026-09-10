@@ -810,6 +810,7 @@ function renderOnboarding() {
         </div>
       </div>
       <div class="card-footer">
+        ${s.agreement.sent ? `<button class="btn-sm" style="background:#ff66c4;color:#fff;border:none;" onclick="createOnboardingReminders('${s.id}')">📅 Onboarding Reminders</button>` : ''}
         <button class="btn-sm btn-ghost" onclick="toggleHold('${s.id}')">⏸ Put On Hold</button>
         <button class="btn-sm btn-danger" onclick="showTab('offboarding');selectOffboardSpeaker('${s.id}')">Offboard Speaker</button>
       </div>
@@ -1110,6 +1111,27 @@ function updateAgreementDates(id, key, val) {
     s.agreement.endDate = addYears(s.agreement.effective, s.agreement.years);
   }
   save(); render();
+}
+
+// ─── ONBOARDING CALENDAR REMINDERS ───────────────────────────────────────────
+
+function createOnboardingReminders(id) {
+  const s = data.speakers.find(x => x.id === id);
+  if (!s || !s.agreement.sent) { alert('No agreement date on file for this speaker.'); return; }
+  const signed = new Date(s.agreement.sent + 'T12:00:00');
+  function gcalDate(d) { return d.toISOString().replace(/[-:]/g,'').substring(0,8); }
+  function offsetDate(d, days) { const r = new Date(d); r.setDate(r.getDate() + days); return r; }
+  const cal = 'c_a7e1ae4bdc93a703bb07cbf969a022c070912ce23410db6502cc5a0cc37dbf01%40group.calendar.google.com';
+  const events = [
+    { d: offsetDate(signed, 35), title: `📋 ${s.name} — Portal Training Check-In (35 Days)` },
+    { d: offsetDate(signed, 65), title: `🎤 ${s.name} — Portal Work Done, Start Keynote (65 Days)` }
+  ];
+  const details = encodeURIComponent(`TruthSpeaks 365 — Onboarding milestone for ${s.name} (${s.email}). Agreement signed: ${fmt(s.agreement.sent)}`);
+  events.forEach(ev => {
+    const ds = gcalDate(ev.d);
+    const de = gcalDate(offsetDate(ev.d, 1));
+    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${ds}/${de}&details=${details}&src=${cal}`, '_blank');
+  });
 }
 
 // ─── COI CALENDAR REMINDERS ───────────────────────────────────────────────────
