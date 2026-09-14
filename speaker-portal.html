@@ -164,7 +164,11 @@ tr:hover td { background: #fafaf8; }
 
 <div class="header">
   <h1>TruthSpeaks 365 &mdash; Speaker Portal</h1>
-  <span id="today-date"></span>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span id="today-date"></span>
+    <button onclick="exportData()" style="background:#c1f944;color:#161413;border:none;border-radius:6px;padding:6px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;">⬇ Export Backup</button>
+    <label style="background:#38b6ff;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;">⬆ Import Backup<input type="file" accept=".json" style="display:none;" onchange="importData(this)"></label>
+  </div>
 </div>
 
 <nav class="nav">
@@ -529,6 +533,34 @@ function save() {
 }
 
 let data = loadData();
+
+function exportData() {
+  const blob = new Blob([JSON.stringify({ speakers: data.speakers, offboarded: data.offboarded }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ts365-portal-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.speakers) { alert('Invalid backup file.'); return; }
+      if (!confirm('This will replace ALL current portal data with the backup. Continue?')) return;
+      data.speakers = parsed.speakers;
+      data.offboarded = parsed.offboarded || [];
+      save(); render();
+      alert('Data restored successfully!');
+    } catch(err) { alert('Error reading file: ' + err.message); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
 
 // On startup: load from cloud, but don't overwrite if user already made changes
 loadFromCloud().then(cloudData => {
