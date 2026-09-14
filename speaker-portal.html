@@ -484,33 +484,23 @@ const DEFAULT_OFFBOARDED = [
   { id:'o3', name:'Magaly', email:'', date:'', thinkific:true, forms:true, files:true, emailGroup:true, website:true, pipedrive:true }
 ];
 
-// ─── SUPABASE CLOUD SYNC ─────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://tnyfkebrzdqmbaijvhoz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRueWZrZWJyemRxbWJhaWp2aG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MjkxMTUsImV4cCI6MjA5NzIwNTExNX0.6DSNI8SKsaOKcTgmJ1IDzLXD_YgDj5lgEeWhpkwERAY';
+// ─── GOOGLE APPS SCRIPT CLOUD SYNC ──────────────────────────────────────────
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz5oaDMQCrt5Yp9tkEaGrB5CfpvIp_tIGFqVuQw7wsB1xATTIaQbK0OtAG6JvcaDbQv/exec';
 
 async function loadFromCloud() {
   try {
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/portal_data?id=eq.main&select=data`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    const rows = await resp.json();
-    if (rows && rows.length > 0 && rows[0].data) return rows[0].data;
-  } catch(e) { console.warn('Cloud load failed'); }
+    const resp = await fetch(GAS_URL, { redirect: 'follow' });
+    const json = await resp.json();
+    if (json && json.speakers) return json;
+  } catch(e) { console.warn('Cloud load failed', e); }
   return null;
 }
 
 async function saveToCloud() {
   try {
-    const resp = await fetch(`${SUPABASE_URL}/rest/v1/portal_data`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify({ id: 'main', data: { speakers: data.speakers, offboarded: data.offboarded }, updated_at: new Date().toISOString() })
-    });
+    const payload = JSON.stringify({ speakers: data.speakers, offboarded: data.offboarded });
+    const encoded = encodeURIComponent(payload);
+    const resp = await fetch(GAS_URL + '?data=' + encoded, { redirect: 'follow' });
     if (!resp.ok) console.warn('Cloud save HTTP error', resp.status);
   } catch(e) { console.warn('Cloud save failed', e); }
 }
