@@ -175,7 +175,6 @@ tr:hover td { background: #fafaf8; }
   <button class="active" onclick="showTab('dashboard',this)">Dashboard</button>
   <button onclick="showTab('onboarding',this)">Onboarding</button>
   <button onclick="showTab('agreements',this)">Agreements &amp; COI</button>
-  <button onclick="showTab('training',this)">Training Progress</button>
   <button onclick="showTab('offboarding',this)">Offboarding</button>
 </nav>
 
@@ -219,13 +218,7 @@ tr:hover td { background: #fafaf8; }
     <div class="speaker-grid" id="agreement-cards"></div>
   </div>
 
-  <!-- TRAINING -->
-  <div id="tab-training" class="tab-content">
-    <div class="section-title">Training Progress by Module</div>
-    <div class="speaker-grid" id="training-cards"></div>
-  </div>
-
-  <!-- OFFBOARDING -->
+<!-- OFFBOARDING -->
   <div id="tab-offboarding" class="tab-content">
     <div class="section-title">Offboard a Speaker</div>
     <p style="font-size:.85rem;color:#888;margin-bottom:20px;">Select a speaker to see everything that needs to be removed or undone before they're offboarded.</p>
@@ -659,7 +652,6 @@ function render() {
   renderDashboard();
   renderOnboarding();
   renderAgreements();
-  renderTraining();
   renderOffboarding();
 }
 
@@ -781,14 +773,14 @@ function renderOnboarding() {
     const ob = s.onboarding;
     const speakerChecks = [
       ['onboardEmailSent','Sent Onboarding Email'],
-      ['trainingPortalAccess','Gave Access to Training Portal'],
       ['addedToEmailGroup','Added to Email Group (Gmail)'],
       ['pipedriveCoiActivity','Set Pipedrive Activity — COI Due Date'],
       ['pipedrive60DayActivity','Set Pipedrive Activity — 60-Day Training Deadline'],
-      ['calAdded60Day','Added 60-Day Deadline to Complete Training Portal on Google Cal'],
-      ['trainingComplete','Training Portal Complete (60 days)'],
-      ['calAdded30Day','Added 30-Day Deadline to Complete Keynote on Google Cal'],
-      ['contractReceived','Contract Received (Signed)']
+      ['contractReceived','Contract Received (Signed)'],
+      ['hsAssembly','High School Assembly'],
+      ['msAssembly','Middle School Assembly'],
+      ['studentCouncilAssembly','Student Council Assembly'],
+      ['pdPresentation','PD']
     ];
     const erinChecks = [
       ['addedToPromoFolder','Added to Promotional Folder'],
@@ -902,87 +894,6 @@ function renderAgreements() {
           <div style="margin-top:8px;"><a href="${COI_FOLDER}" target="_blank" class="link-btn">📁 View COI Drive Folder</a></div>
           </div>
         `}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// TRAINING
-function renderTraining() {
-  const speakers = data.speakers.filter(s => s.status !== 'on_hold');
-  const MODULES = [
-    { num:1, title:'Module 1 — Reflection Recording', checks:[
-      ['mod1_recording','Short Recording Submitted'],['mod1_feedback','Feedback Sent']
-    ]},
-    { num:7, title:'Module 7 — Inky Johnson "Broke the Internet"', checks:[
-      ['mod7_inky','Assignment Submitted'],['mod7_feedback','Feedback Sent']
-    ]},
-    { num:8, title:'Module 8 — Quiz', checks:[
-      ['mod8_quiz','Quiz Score Emailed']
-    ]},
-    { num:9, title:'Module 9 — 3 Theme Focus (Strategies 1-3)', checks:[
-      ['mod9_theme','Theme Focus Submitted'],['mod9_feedback','Feedback Sent']
-    ]},
-    { num:10, title:'Module 10 — Mini Social Experiment', checks:[
-      ['mod10_experiment','Mini Social Experiment Report Submitted'],['mod10_feedback','Feedback Given']
-    ]},
-    { num:12, title:'Module 12 — Theme Focus (Strategies 4-5)', checks:[
-      ['mod12_theme2','Theme Focus Submitted'],['mod12_feedback','Feedback Sent']
-    ]},
-    { num:13, title:'Module 13 — Erin Pompa "Awakening Your Warrior Spirit"', checks:[
-      ['mod13_erin','Assignment Submitted'],['mod13_feedback','Feedback Sent']
-    ]},
-    { num:14, title:'Module 14 — Final Quiz', checks:[
-      ['mod14_quiz','Quiz Score Emailed']
-    ]},
-    { num:15, title:'Module 15 — High School Assembly', checks:[
-      ['mod15_hs','High School Assembly Complete']
-    ]},
-    { num:16, title:'Module 16 — Middle School Assembly', checks:[
-      ['mod16_ms','Middle School Assembly Complete']
-    ]},
-    { num:17, title:'Module 17 — Additional Presentations', checks:[
-      ['mod17_additional','Additional Presentations Complete']
-    ]}
-  ];
-
-  document.getElementById('training-cards').innerHTML = speakers.map(s => {
-    const total = MODULES.reduce((acc,m) => acc + m.checks.length, 0);
-    const done = MODULES.reduce((acc,m) => acc + m.checks.filter(([k]) => s.training[k]).length, 0);
-    const pct = Math.round(done/total*100);
-
-    const moduleRows = MODULES.map(m => {
-      const mDone = m.checks.filter(([k]) => s.training[k]).length;
-      const mTotal = m.checks.length;
-      const cls = mDone === mTotal ? 'complete' : mDone > 0 ? 'partial' : 'pending';
-      return `<div class="module-row ${cls}">
-        <div class="module-header">
-          <span class="module-title">${m.title}</span>
-          <span class="module-progress">${mDone}/${mTotal}</span>
-        </div>
-        <div class="module-checks">
-          ${m.checks.map(([k,label]) => `
-            <div class="check-item ${s.training[k]?'done':''}">
-              <input type="checkbox" id="${s.id}_tr_${k}" ${s.training[k]?'checked':''} onchange="toggleField('${s.id}','training','${k}',this.checked)">
-              <label for="${s.id}_tr_${k}">${label}</label>
-            </div>`).join('')}
-        </div>
-      </div>`;
-    }).join('');
-
-    return `<div class="speaker-card">
-      <div class="card-header">
-        <div class="card-name">${s.name}</div>
-        <div class="card-email">${s.email}</div>
-        <div class="card-meta" style="margin-top:6px;">
-          <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${pct===100?'#27ae60':pct>50?'#f39c12':'#c0392b'};border-radius:3px;transition:width .3s;"></div>
-          </div>
-          <span style="font-size:.72rem;color:#888;">${done}/${total} tasks complete (${pct}%)</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="module-list">${moduleRows}</div>
       </div>
     </div>`;
   }).join('');
